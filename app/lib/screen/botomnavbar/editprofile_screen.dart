@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:app/app_router.dart';
 import 'package:app/components/custom_textfield.dart';
 import 'package:app/components/rounded_button.dart';
+import 'package:app/services/rest_api.dart';
+import 'package:app/utils/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -19,6 +23,31 @@ class _EditprofileScreenState extends State<EditprofileScreen> {
   final _birthdayController = TextEditingController();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
+
+  getProfile() async {
+    try {
+      var response = await CallAPI().getUserProfileAPI();
+      var body = jsonDecode(response);
+      if (body != null && body is Map<String, dynamic>) {
+        setState(() {
+          _nameController.text = body['name'] ?? 'ไม่มีข้อมูล';
+          _birthdayController.text = body['birthday'] ?? 'ไม่ระบุวันเกิด';
+          _ageController.text = body['age']?.toString() ?? '0';
+          _heightController.text = body['height']?.toString() ?? '0';
+          _weightController.text = body['weight']?.toString() ?? '0';
+        });
+      }
+    } catch (e) {
+      // จัดการข้อผิดพลาด
+      Utility().logger.e("เกิดข้อผิดพลาด: $e");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getProfile();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +75,8 @@ class _EditprofileScreenState extends State<EditprofileScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(50.0),
                   child: Center(
-                    key: _formKeyProfile,
                     child: Form(
+                      key: _formKeyProfile,
                       child: Column(
                         children: [
                           Column(
@@ -123,7 +152,7 @@ class _EditprofileScreenState extends State<EditprofileScreen> {
                                 padding:
                                     EdgeInsets.only(left: 20.0, bottom: 5.0),
                                 child: Text(
-                                  "วันเกิด",
+                                  "วันเกิด วว/ดด/ปป",
                                   style: TextStyle(
                                     color: Color.fromARGB(255, 180, 171, 171),
                                     fontSize: 15,
@@ -221,8 +250,26 @@ class _EditprofileScreenState extends State<EditprofileScreen> {
                               child: RoundedButton(
                                 label: "ยืนยันการแก้ไขโปรไฟล์",
                                 onPressed: () async {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.editprofile);
+                                  if (_formKeyProfile.currentState!
+                                      .validate()) {
+                                    // ถ้าข้อมูลผ่านการตรวจสอบ ให้ทำการบันทึกข้อมูล
+                                    _formKeyProfile.currentState!.save();
+                                    var response = await CallAPI().editUser({
+                                      "name": _nameController.text,
+                                      "age": _ageController.text,
+                                      "birthday": _birthdayController.text,
+                                      "height": _heightController.text,
+                                      "weight": _weightController.text
+                                    });
+                                    Utility().logger.i(response);
+                                    var body = jsonDecode(response);
+                                    if (body['success'] == true) {
+                                      if (body['success'] == true) {
+                                        Navigator.pushReplacementNamed(
+                                            context, AppRouter.home);
+                                      }
+                                    }
+                                  }
                                 },
                               ),
                             ),

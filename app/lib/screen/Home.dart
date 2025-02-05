@@ -51,7 +51,7 @@ class _NAVState extends State<NAV> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: Text(_title, style: const TextStyle( color: Colors.white),),
+        title: Center(child: Text(_title, style: const TextStyle( color: Colors.white),)),
       ),
       backgroundColor: Colors.black,
       body: _children[_currentIndex],

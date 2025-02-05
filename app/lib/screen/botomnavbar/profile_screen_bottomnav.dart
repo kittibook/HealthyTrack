@@ -17,27 +17,26 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
   String? _name, _day, _h, _w, _bmi, _age, _Waist, _bmidetail;
 
   getProfile() async {
-  try {
-    var response = await CallAPI().getUserProfileAPI();
-    var body = jsonDecode(response);
-    if (body != null && body is Map<String, dynamic>) {
-      setState(() {
-        _name = body['name'] ?? 'ไม่มีข้อมูล';
-        _day = body['birthday'] ?? 'ไม่ระบุวันเกิด';
-        _age = body['age']?.toString() ?? '0';
-        _h = body['height']?.toString() ?? '0';
-        _w = body['weight']?.toString() ?? '0';
-        _Waist = body['Waist'] ?? 'ไม่มีข้อมูล';
-        _bmi = body['bmi']?.toString()  ?? 'ไม่มีข้อมูล';
-        _bmidetail = body['bmi_detail'] ?? 'ไม่มีข้อมูล';
-      });
+    try {
+      var response = await CallAPI().getUserProfileAPI();
+      var body = jsonDecode(response);
+      if (body != null && body is Map<String, dynamic>) {
+        setState(() {
+          _name = body['name'] ?? 'ไม่มีข้อมูล';
+          _day = body['birthday'] ?? 'ไม่ระบุวันเกิด';
+          _age = body['age']?.toString() ?? '0';
+          _h = body['height']?.toString() ?? '0';
+          _w = body['weight']?.toString() ?? '0';
+          _Waist = body['Waist'] ?? 'ไม่มีข้อมูล';
+          _bmi = body['bmi']?.toString() ?? 'ไม่มีข้อมูล';
+          _bmidetail = body['bmi_detail'] ?? 'ไม่มีข้อมูล';
+        });
+      }
+    } catch (e) {
+      // จัดการข้อผิดพลาด
+      Utility().logger.e("เกิดข้อผิดพลาด: $e");
     }
-  } catch (e) {
-    // จัดการข้อผิดพลาด
-    Utility().logger.e("เกิดข้อผิดพลาด: $e");
   }
-}
-
 
   @override
   void initState() {
@@ -59,10 +58,10 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                   width: 200,
                   height: 200,
                   child: SizedBox(
-                        width: double.infinity,
-                        height: 200 * 0.60,
-                        child: Image.asset('assets/images/1.png'),
-                    
+                    width: double.infinity,
+                    height: 200 * 0.60,
+                    child: Image.asset('assets/images/1.png'),
+
                     // child: Image.asset('assets/images/app1.png'),
                   ),
                 ),
@@ -106,7 +105,7 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                 _name ?? 'ไม่มีข้อมูล',
+                                _name ?? 'ไม่มีข้อมูล',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -116,7 +115,7 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                           ],
                         ),
                       ),
-                       Padding(
+                      Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Row(
                           children: [
@@ -144,7 +143,7 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                               padding: EdgeInsets.all(8.0),
                               child: Text(
                                 _age ?? 'ไม่มีข้อมูล',
-                                style:const TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
                                 ),
@@ -163,7 +162,7 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                           ],
                         ),
                       ),
-                       Padding(
+                      Padding(
                         padding: const EdgeInsets.only(left: 10.0),
                         child: Row(
                           children: [
@@ -190,7 +189,7 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                             Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                 _day ?? 'ไม่พบข้อมูล',
+                                _day ?? 'ไม่พบข้อมูล',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -200,7 +199,7 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                           ],
                         ),
                       ),
-                       Padding(
+                      Padding(
                         padding: EdgeInsets.only(left: 10.0),
                         child: Row(
                           children: [
@@ -331,24 +330,55 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                           ],
                         ),
                       ),
-
-
                       Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Center(
-                          child: RoundedButton(
-                            label: "แก้ไขโปรไฟลฺ์",
-                            onPressed: () async {
-                               Navigator.pushNamed(context, AppRouter.editprofile);
-                            }
+                          padding: const EdgeInsets.all(10.0),
+                          child: Center(
+                            child: RoundedButton(
+                                label: "แก้ไขโปรไฟลฺ์",
+                                onPressed: () async {
+                                  Navigator.pushNamed(
+                                      context, AppRouter.editprofile);
+                                }),
+                          )),
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: GestureDetector(
+                            onTap: () async {
+                              await Utility.removeSharedPreference("token");
+                              Navigator.pushReplacementNamed(
+                                  context, AppRouter.login);
+                            },
+                            child: SizedBox(
+                              width: double.infinity * 0.8,
+                              height: 50,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Colors.red,
+                                ),
+                                child: Center(
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      const Text('ออกจากระบบ',
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                        )
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              // const SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
               // Center(
               //   child: Container(
               //     width: MediaQuery.of(context).size.width * 0.9,
@@ -382,7 +412,7 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
               //     ),
               //   ),
               // ),
-            const SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
               Center(
                 child: Container(
                   width: MediaQuery.of(context).size.width * 0.9,
@@ -421,7 +451,6 @@ class _ProfileScreenBottomnavState extends State<ProfileScreenBottomnav> {
                   ),
                 ),
               ),
-            
             ],
           ),
         ),

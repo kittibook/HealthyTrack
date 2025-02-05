@@ -1,6 +1,10 @@
+import 'dart:convert';
 
+import 'package:app/app_router.dart';
 import 'package:app/components/custom_textfield.dart';
 import 'package:app/components/rounded_button.dart';
+import 'package:app/services/rest_api.dart';
+import 'package:app/utils/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -18,7 +22,6 @@ class _Book1State extends State<Book1> {
   final _bmiController = TextEditingController();
   final _pressureController = TextEditingController();
   final _sugarController = TextEditingController();
-  final _fatController = TextEditingController();
   final _totalCholesterolController = TextEditingController();
   final _HDLController = TextEditingController();
   final _LDLController = TextEditingController();
@@ -140,7 +143,7 @@ class _Book1State extends State<Book1> {
                                               height = height /
                                                   100; // แปลงเซนติเมตรเป็นเมตร
                                               double bmi =
-                                                  weight / (height * height) ;
+                                                  weight / (height * height);
                                               _bmiController.text =
                                                   bmi.toStringAsFixed(
                                                       2); // เก็บค่า BMI ลงใน Controller
@@ -239,7 +242,7 @@ class _Book1State extends State<Book1> {
                                               height = height /
                                                   100; // แปลงเซนติเมตรเป็นเมตร
                                               double bmi =
-                                                  weight / (height * height) ;
+                                                  weight / (height * height);
                                               _bmiController.text =
                                                   bmi.toStringAsFixed(
                                                       2); // เก็บค่า BMI ลงใน Controller
@@ -573,6 +576,27 @@ class _Book1State extends State<Book1> {
                                           .validate()) {
                                         // ถ้าข้อมูลผ่านการตรวจสอบ ให้ทำการบันทึกข้อมูล
                                         _formKeybody.currentState!.save();
+
+                                        var response = await CallAPI().book_1({
+                                          "height": _heightController.text,
+                                          "weight": _weightController.text,
+                                          "bmi": _bmiController.text,
+                                          "pressure": _pressureController.text,
+                                          "sugarlevel": _sugarController.text,
+                                          "totalCholesterol":
+                                              _totalCholesterolController.text,
+                                          "HDL": _HDLController.text,
+                                          "LDL": _LDLController.text,
+                                          "Trlglycerldes":
+                                              _TrlglycerldesController.text,
+                                        });
+                                        Utility().logger.i(response);
+                                        var body = jsonDecode(response);
+                                        if (body['successfull'] == "success") {
+                                          Navigator.pushNamed(
+                                              context, AppRouter.menubook1,
+                                              arguments: {'data': body});
+                                        }
                                       }
                                     },
                                   ),

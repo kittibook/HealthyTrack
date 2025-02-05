@@ -45,6 +45,22 @@ class CallAPI {
     }
   }
 
+  editUser(data) async {
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.post('edit', data: data);
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
+
   getUserProfileAPI() async {
     // Check Network Connection
     if (await Utility.checkNetwork() == '') {
@@ -94,5 +110,71 @@ class CallAPI {
       }
     }
   }
+
+   getchartToRun1API() async {
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.get('eat/getuser');
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
+
+  getchartwalkAPI() async {
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.get('walk/getuser');
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
+
+  getchartallAPI() async {
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.get('walk/getuserbmi');
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
+
+  getchartwalkkcalAPI() async {
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.get('walk/getuserkcal');
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
+
+
 
 }

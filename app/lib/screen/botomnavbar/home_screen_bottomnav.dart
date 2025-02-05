@@ -15,7 +15,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late StreamController<Map<String, dynamic>> _stepCountStreamController;
   late Stream<StepCount> _stepCountStream;
-  double _kal = 0, _distance = 0;
+  double _kal = 0, _distance = 0 , percent = 0.0;
   int _steps = 0;
 
   @override
@@ -44,17 +44,19 @@ class _HomeState extends State<Home> {
   void onStepCount(StepCount event) async {
     // คำนวณแคลอรี่
     double kcal = (event.steps * 0.05); // แปลงเป็น int โดยประมาณแคลอรี่
+    double percent1 = (kcal / 120).clamp(0.02, 1.0);
 
     // สมมติว่า 1 step = 0.0008 กิโลเมตร (หรือคุณสามารถปรับสูตรตามที่คุณต้องการ)
     double distance = (event.steps * 0.0008); // คำนวณระยะทาง
 
     // พิมพ์ข้อมูล
-    print('steps: ${event.steps}, kcal: $kcal, distance: $distance');
+    print('percent: ${percent1},steps: ${event.steps}, kcal: $kcal, distance: $distance');
 
     setState(() {
       _steps = event.steps; // ตั้งค่า _steps เป็นจำนวนก้าว
       _kal = kcal; // ตั้งค่า _kal เป็นแคลอรี่
-      _distance = distance; // ตั้งค่า _distance เป็นระยะทาง
+      _distance = distance; // ตั้งค่า _distance เป็นระยะทาง\
+      percent = percent1;
     });
 
     // _stepCountStreamController.add(data);
@@ -97,13 +99,13 @@ class _HomeState extends State<Home> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
-                        "วันอังคาร ที่ 7",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 16,
-                        ),
-                      ),
+                      // Text(
+                      //   "วันอังคาร ที่ 7",
+                      //   style: TextStyle(
+                      //     color: Colors.grey,
+                      //     fontSize: 16,
+                      //   ),
+                      // ),
                     ],
                   ),
                   Container(
@@ -113,6 +115,13 @@ class _HomeState extends State<Home> {
                       shape: BoxShape.circle,
                       color: Colors.grey,
                     ),
+                    child: SizedBox(
+                    width: double.infinity,
+                    height: 200 * 0.60,
+                    child: Image.asset('assets/images/1.png'),
+
+                    // child: Image.asset('assets/images/app1.png'),
+                  ),
                   ),
                 ],
               ),
@@ -146,7 +155,7 @@ class _HomeState extends State<Home> {
                         ),
                         SizedBox(height: 8), // ระยะห่างระหว่างข้อความ
                         Text(
-                          "${_kal.toString()} กิโลแคล",
+                          "${_kal.toString()} / 120 กิโลแคล",
                           style: const TextStyle(
                             color: Color.fromARGB(255, 183, 48, 39),
                             fontSize: 22,
@@ -160,7 +169,7 @@ class _HomeState extends State<Home> {
                       radius: 70.0,
                       lineWidth: 25.0,
                       animation: true,
-                      percent: 0.8,
+                      percent: percent,
                       circularStrokeCap: CircularStrokeCap.round,
                       progressColor: Color.fromARGB(255, 183, 48, 39),
                       backgroundColor: Color.fromARGB(255, 100, 37, 32),
