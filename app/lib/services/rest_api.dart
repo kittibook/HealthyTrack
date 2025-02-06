@@ -111,7 +111,7 @@ class CallAPI {
     }
   }
 
-   getchartToRun1API() async {
+  getchartToRun1API() async {
     if (await Utility.checkNetwork() == '') {
       return jsonEncode({
         'successfull': 'fail',
@@ -175,6 +175,68 @@ class CallAPI {
     }
   }
 
+  saveDbTime(data) async {
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.post('meditate/insert', data: data);
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
 
+  Save_1INSERT(data) async {
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.post('menu/update', data: data);
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
 
+  getSave_2activity() async {
+    // Check Network Connection
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.get('activity/get');
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
+
+  BHome(data) async {
+    if (await Utility.checkNetwork() == '') {
+      return jsonEncode({
+        'successfull': 'fail',
+        'message': {'title': 'การเชื่อมต่อล้มเหลว', 'text': 'ลองอีกครั้ง'}
+      });
+    } else {
+      try {
+        final response = await _dioWithAuth.post('walk/insert', data: data);
+        return jsonEncode(response.data);
+      } catch (e) {
+        Utility().logger.e(e);
+      }
+    }
+  }
 }

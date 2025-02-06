@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:async';
-
+import 'package:app/utils/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:app/services/rest_api.dart'; // Import สำหรับ CallAPI
 
 class Save2 extends StatefulWidget {
   const Save2({super.key});
@@ -15,15 +17,48 @@ class _Save2State extends State<Save2> {
   bool _isTimerRunning = false;
   late Timer _timer;
   late Activity _currentActivity;
+  List<Activity> activities = []; // เก็บกิจกรรมทั้งหมด
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchActivities();
+  }
+
+  // ฟังก์ชันดึงข้อมูลจาก API
+  _fetchActivities() async {
+    var response = await CallAPI().getSave_2activity();
+    var body = jsonDecode(response);
+    List<Activity> activityList = [];
+
+    for (var item in body) {
+      activityList.add(Activity(
+        title: item['name'],
+        timeInMinutes:
+            int.tryParse(item['time'].toString()) ?? 0, // แปลงเป็น int
+        calories: '${item['kcal']} Kcal',
+        kcal: int.tryParse(item['kcal']) ?? 0,
+      ));
+    }
+
+    setState(() {
+      activities = activityList;
+    });
+  }
+
+  // เริ่มจับเวลา
   void _startTimer(Activity activity) {
+
     setState(() {
       _currentActivity = activity;
       _isTimerRunning = true;
+      _seconds = 0;
     });
+    // print(activity.kcal);
+    int maxSeconds = activity.timeInMinutes * 60; // ใช้เวลาจาก API
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_seconds < 30 * 60) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (_seconds < maxSeconds) {
         setState(() {
           _seconds++;
         });
@@ -32,15 +67,37 @@ class _Save2State extends State<Save2> {
         setState(() {
           _isTimerRunning = false;
         });
+        await Utility.setSharedPreference('activity', activity.kcal);
+        _showTimeUpDialog(); // แจ้งเตือนเมื่อครบเวลา
       }
     });
   }
 
+  // หยุดจับเวลา
   void _stopTimer() {
     setState(() {
       _isTimerRunning = false;
     });
     _timer.cancel();
+  }
+
+  // แสดงแจ้งเตือนเมื่อครบเวลา
+  void _showTimeUpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('เวลาครบแล้ว!'),
+        content: Text('คุณทำกิจกรรม "${_currentActivity.title}" ครบเวลาแล้ว'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('ตกลง'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -68,7 +125,7 @@ class _Save2State extends State<Save2> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      backgroundColor: Colors.black,
       title: const Text(
         'ติดตามกิจกรรมทางกาย',
         style: TextStyle(color: Colors.white),
@@ -77,13 +134,6 @@ class _Save2State extends State<Save2> {
   }
 
   Widget _buildActivityGrid() {
-    final activities = [
-      Activity(
-          title: 'กวาดลานวัด', duration: '30 นาที', calories: '1000 Kcal '),
-      Activity(title: 'เดินจงกรม', duration: '30 นาที', calories: '500 Kcal'),
-      Activity(title: 'วิ่งจงกรม', duration: '30 นาที', calories: '500 Kcal'),
-    ];
-
     return Expanded(
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -122,14 +172,14 @@ class _Save2State extends State<Save2> {
             radius: 70.0,
             lineWidth: 25.0,
             animation: true,
-            percent: _seconds / (30 * 60), // Max timer value is 30 minutes
+            percent: _seconds / (_currentActivity.timeInMinutes * 60),
             circularStrokeCap: CircularStrokeCap.round,
             progressColor: const Color.fromARGB(255, 183, 48, 39),
             backgroundColor: const Color.fromARGB(255, 100, 37, 32),
           ),
           const SizedBox(height: 8),
           Text(
-            formattedTime, // Display formatted time (mm:ss)
+            formattedTime,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -194,7 +244,7 @@ class _Save2State extends State<Save2> {
             ),
             const SizedBox(height: 8),
             Text(
-              activity.duration, // แสดง duration ที่นี่
+              '${activity.timeInMinutes} นาที',
               style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -226,12 +276,14 @@ class _Save2State extends State<Save2> {
 
 class Activity {
   final String title;
-  final String duration;
+  final int timeInMinutes;
   final String calories;
+  final int kcal;
 
   const Activity({
     required this.title,
-    required this.duration,
+    required this.timeInMinutes,
     required this.calories,
+    required this.kcal,
   });
 }

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:app/services/rest_api.dart';
+import 'package:app/utils/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -15,17 +17,18 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late StreamController<Map<String, dynamic>> _stepCountStreamController;
   late Stream<StepCount> _stepCountStream;
-  double _kal = 0, _distance = 0 , percent = 0.0;
+  double _kal = 0, _distance = 0, percent = 0.0, eat = 0.0, percenteat = 0.0, activity2 = 0.0;
   int _steps = 0;
-
+  late Timer _dailyResetTimer;
   @override
   void initState() {
     super.initState();
     _stepCountStreamController = StreamController<Map<String, dynamic>>();
-
+    get();
     checkPermissions().then((_) {
       initPlatformState();
     });
+    _startDailyResetTimer();
   }
 
   Future<void> checkPermissions() async {
@@ -37,6 +40,7 @@ class _HomeState extends State<Home> {
 
   @override
   void dispose() {
+    _dailyResetTimer.cancel();
     _stepCountStreamController.close();
     super.dispose();
   }
@@ -49,17 +53,73 @@ class _HomeState extends State<Home> {
     // สมมติว่า 1 step = 0.0008 กิโลเมตร (หรือคุณสามารถปรับสูตรตามที่คุณต้องการ)
     double distance = (event.steps * 0.0008); // คำนวณระยะทาง
 
-    // พิมพ์ข้อมูล
-    print('percent: ${percent1},steps: ${event.steps}, kcal: $kcal, distance: $distance');
-
     setState(() {
       _steps = event.steps; // ตั้งค่า _steps เป็นจำนวนก้าว
-      _kal = kcal; // ตั้งค่า _kal เป็นแคลอรี่
+      _kal = kcal + activity2; // ตั้งค่า _kal เป็นแคลอรี่
       _distance = distance; // ตั้งค่า _distance เป็นระยะทาง\
       percent = percent1;
     });
 
     // _stepCountStreamController.add(data);
+  }
+
+  void _startDailyResetTimer() {
+    _dailyResetTimer =
+        Timer.periodic(const Duration(minutes: 1), (timer) async {
+      await _checkAndResetDailySteps();
+    });
+  }
+
+  // เช็กว่าวันเปลี่ยนหรือยัง ถ้าเปลี่ยนแล้วให้รีเซ็ตข้อมูล
+  Future<void> _checkAndResetDailySteps() async {
+    String? lastDate =
+        Utility.getSharedPreference('last_reset_date'); // ดึงวันที่รีเซ็ตล่าสุด
+    String today = DateTime.now()
+        .toIso8601String()
+        .split('T')[0]; // วันที่ปัจจุบัน (YYYY-MM-DD)
+
+    if (lastDate != today) {
+      // ถ้าวันเปลี่ยนไปจากวันล่าสุดที่รีเซ็ต
+      await saveData(); // บันทึกข้อมูลก่อนรีเซ็ต
+      await Utility.setSharedPreference('Kcal $lastDate', 0.0);
+      await Utility.setSharedPreference(
+          'last_reset_date', today); // อัปเดตวันล่าสุดที่รีเซ็ต
+      setState(() {
+        _steps = 0;
+        _kal = 0;
+        _distance = 0;
+        percent = 0.0;
+      });
+    }
+  }
+
+  saveData() async {
+    // walkcount: string; kcal: string 
+    await CallAPI().BHome({
+      "walkcount" : _steps,
+      "kcal" : _kal,
+    });
+  }
+
+  get() async {
+    String? lastDate = Utility.getSharedPreference('last_reset_date');
+    int activity = await Utility.getSharedPreference('activity')?? 0;
+    double kkal = 0.0;
+    double activity1 = 0.0;
+    int arm2cal = 0;
+    int arm2steps = 0; 
+    activity1 = (activity / 1000);
+    kkal = await Utility.getSharedPreference('Kcal $lastDate') ?? 0.0;
+    double percent1 = (kkal / 100).clamp(0.02, 1.0);
+
+    setState(() {
+      _steps = arm2steps + _steps;
+        _kal = arm2cal + _kal ;
+      eat = kkal;
+      activity2 = activity1;
+      percenteat = percent1;
+    });
+
   }
 
   void onStepCountError(error) {
@@ -116,12 +176,12 @@ class _HomeState extends State<Home> {
                       color: Colors.grey,
                     ),
                     child: SizedBox(
-                    width: double.infinity,
-                    height: 200 * 0.60,
-                    child: Image.asset('assets/images/1.png'),
+                      width: double.infinity,
+                      height: 200 * 0.60,
+                      child: Image.asset('assets/images/1.png'),
 
-                    // child: Image.asset('assets/images/app1.png'),
-                  ),
+                      // child: Image.asset('assets/images/app1.png'),
+                    ),
                   ),
                 ],
               ),
@@ -141,7 +201,7 @@ class _HomeState extends State<Home> {
                       .spaceAround, // จัดระยะห่างระหว่างองค์ประกอบ
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                     Column(
+                    Column(
                       crossAxisAlignment:
                           CrossAxisAlignment.start, // จัดข้อความให้ชิดซ้าย
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -155,7 +215,7 @@ class _HomeState extends State<Home> {
                         ),
                         SizedBox(height: 8), // ระยะห่างระหว่างข้อความ
                         Text(
-                          "${_kal.toString()} / 120 กิโลแคล",
+                          "${_kal.toStringAsFixed(2)} / 120 กิโลแคล",
                           style: const TextStyle(
                             color: Color.fromARGB(255, 183, 48, 39),
                             fontSize: 22,
@@ -197,11 +257,11 @@ class _HomeState extends State<Home> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // การ์ดจำนวนก้าว
-                  _buildStatCard("จำนวนก้าว", _steps.toStringAsFixed(2), "วันนี้",
-                      const Color.fromARGB(255, 161, 78, 175)),
+                  _buildStatCard("จำนวนก้าว", _steps.toString(),
+                      "วันนี้", const Color.fromARGB(255, 161, 78, 175)),
                   // การ์ดระยะทาง
-                  _buildStatCard("ระยะทางก้าว", _distance.toStringAsFixed(2), "วันนี้",
-                      const Color.fromARGB(255, 102, 159, 206)),
+                _buildStatCard("ระยะทางก้าว", '${_distance.toStringAsFixed(2)} กิโลเมตร',
+                      "วันนี้", const Color.fromARGB(255, 102, 159, 206)),
                 ],
               ),
             ),
@@ -215,25 +275,71 @@ class _HomeState extends State<Home> {
                   borderRadius: BorderRadius.circular(15),
                   color: const Color.fromARGB(255, 50, 50, 50),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment:
                       CrossAxisAlignment.center, // จัดข้อความให้ชิดซ้าย
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "ผลการตรวจ",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                      ),
-                    ),
-                    SizedBox(height: 10), // ระยะห่างระหว่างข้อความ
-                    Text(
-                      "ผลการตรวจอยู่ในเกณฑ์ป่วยระดับ 1",
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 206, 209, 27),
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                    Center(
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: const Color.fromARGB(255, 50, 50, 50),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment
+                              .spaceAround, // จัดระยะห่างระหว่างองค์ประกอบ
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment
+                                  .start, // จัดข้อความให้ชิดซ้าย
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  "การได้รับพลังงาน",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                SizedBox(height: 8), // ระยะห่างระหว่างข้อความ
+                                Text(
+                                  "${eat.toStringAsFixed(2)} กิโลแคล",
+                                  style: const TextStyle(
+                                    color: Color.fromARGB(255, 39, 183, 111),
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            new CircularPercentIndicator(
+                              radius: 70.0,
+                              lineWidth: 25.0,
+                              animation: true,
+                              percent: percenteat,
+                              circularStrokeCap: CircularStrokeCap.round,
+                              progressColor: Color.fromARGB(255, 46, 183, 39),
+                              backgroundColor: Color.fromARGB(255, 32, 100, 72),
+                            ),
+
+                            // Container(
+                            //   width: 150,
+                            //   height: 150,
+                            //   decoration: BoxDecoration(
+                            //     borderRadius: BorderRadius.circular(500),
+                            //     border: Border.all(
+                            //       width: 20,
+                            //       color: const Color.fromARGB(255, 183, 48, 39),
+                            //     ),
+                            //   ),
+                            // ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

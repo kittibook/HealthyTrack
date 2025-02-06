@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:app/model/menu_odels.dart';
 import 'package:app/services/rest_api.dart';
@@ -16,24 +17,58 @@ class _Save1State extends State<Save1> {
   String rice = 'ผลไม้';
   String water = 'เมนูน้ำ';
 
+  double eat = 0.0;
+  late Timer _dailyResetTimer;
+
   List<String> foodList = ['เมนูอาหาร', 'ข้าวผัด'];
   List<String> riceList = [
     'ผลไม้',
   ];
   List<String> waterList = ['เมนูน้ำ', 'น้ำส้ม'];
 
-  void submitFood() {
-    print('เมนูอาหาร: $food');
-    print('ข้าว: $rice');
-    print('เมนูน้ำ: $water');
+  void submitFood() async {
+    var data = {
+      'food': food,
+      'fruit': rice,
+      'drink': water,
+    };
+    print(data);
+    if (food != 'เมนูอาหาร' || rice != 'ผลไม้' || water != 'เมนูน้ำ') {
+      var response = await CallAPI().Save_1INSERT(data);
+
+      // Log ข้อมูลที่ได้จาก API
+      Utility().logger.i(response);
+
+      var body = jsonDecode(response);
+
+      if (body['successful'] == 'success') {
+        String? lastDate = Utility.getSharedPreference('last_reset_date');
+        double kkal = 0.0;
+        kkal = await Utility.getSharedPreference('Kcal $lastDate') ?? 0.0;
+        await Utility.setSharedPreference(
+            'Kcal $lastDate', (body['data']['kcal'] / 1000) + kkal);
+
+        setState(() {
+          eat = (body['data']['kcal'] / 1000) + kkal;
+        });
+      }
+    }
   }
+
+
+
+
 
   getUserProfile() async {
     var response = await CallAPI().getMenuAPI();
     var body = jsonDecode(response);
     MenuModel menuModel = MenuModel.fromJson(body);
-    Utility().logger.d(response);
+    // Utility().logger.d(response);
+    String? lastDate = Utility.getSharedPreference('last_reset_date');
+    double kkal = 0.0;
+    kkal = await Utility.getSharedPreference('Kcal $lastDate') ?? 0.0;
     setState(() {
+      eat = kkal;
       if (menuModel.data.isNotEmpty) {
         // ลูปเช็คแต่ละรายการใน menuModel.data
         for (var category in menuModel.data) {
@@ -130,8 +165,8 @@ class _Save1State extends State<Save1> {
                     color: Colors.grey[900],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    '0 กิโลแคลอรี',
+                  child: Text(
+                    '${eat.toStringAsFixed(2)} กิโลแคลอรี',
                     style: TextStyle(
                       color: Color.fromARGB(255, 90, 93, 79),
                       fontSize: 24,

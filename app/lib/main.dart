@@ -29,7 +29,7 @@ void main() async {
   runApp(const MyApp());
   FlutterNativeSplash.remove();
 }
-
+-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

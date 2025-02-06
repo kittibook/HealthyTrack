@@ -1,6 +1,10 @@
 import 'dart:async';
 
+import 'package:app/utils/utility.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:app/services/rest_api.dart';
 
 class Arm1 extends StatefulWidget {
   const Arm1({super.key});
@@ -13,37 +17,32 @@ class _Arm1State extends State<Arm1> {
   Timer? _timer;
   Duration _duration = Duration.zero;
   bool _isRunning = false;
-  Duration _lastDuration = Duration.zero; // บันทึกเวลาล่าสุด
-
+  Duration _lastDuration = Duration.zero;
   bool isLeftSelected = false;
   bool isRightSelected = false;
 
-  void _startOrStopTimer() {
-    if (_isRunning) {
-      _timer?.cancel();
-    } else {
-      _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-        setState(() {
-          _duration += const Duration(milliseconds: 100);
-        });
-      });
-    }
-    setState(() {
-      _isRunning = !_isRunning;
-    });
+  String type = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
-  void _resetTimer() {
-    // บันทึกเวลาล่าสุดก่อนทำการรีเซ็ต
-    setState(() {
-      _lastDuration = _duration;
-      _timer?.cancel();
-      _isRunning = false;
-      _duration = Duration.zero;
-    });
+  void _saveData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String formattedTime = _formatDuration(_duration);
+    await prefs.setString('elapsedTime', formattedTime);
+  }
 
-    // แสดงข้อความบันทึกเวลา
-    _showTimeSavedDialog();
+  void _loadData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? formattedTime = prefs.getString('elapsedTime');
+    if (formattedTime != null) {
+      setState(() {
+        _duration = _parseDuration(formattedTime);
+      });
+    }
   }
 
   String _formatDuration(Duration duration) {
@@ -54,19 +53,75 @@ class _Arm1State extends State<Arm1> {
     return "${twoDigits(duration.inHours)}:${twoDigits(duration.inMinutes % 60)}:${twoDigits(duration.inSeconds % 60)}.$hundredths";
   }
 
+  Duration _parseDuration(String timeString) {
+    final parts = timeString.split(':');
+    final hours = int.parse(parts[0]);
+    final minutes = int.parse(parts[1]);
+    final seconds = int.parse(parts[2].split('.')[0]);
+    final milliseconds = int.parse(parts[2].split('.')[1]) * 10;
+    return Duration(
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        milliseconds: milliseconds);
+  }
+
+  void _startOrStopTimer() {
+    if (isLeftSelected) {
+      if (_isRunning) {
+        _timer?.cancel();
+      } else {
+        _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+          setState(() {
+            _duration += const Duration(milliseconds: 100);
+            // _saveData();
+          });
+        });
+      }
+      setState(() {
+        _isRunning = !_isRunning;
+      });
+    } else {
+      Utility.showAlertDialog(context, 'info', 'กรุณาเลือกโหมด', 'กรุณาเลือกโหมด การเดินจงกรม หรือ นั่งสมาธิ');
+    }
+  }
+
+  void _resetTimer() {
+    setState(() {
+      _lastDuration = _duration;
+      _timer?.cancel();
+      _isRunning = false;
+      _duration = Duration.zero;
+    });
+    _saveData();
+    _showTimeSavedDialog();
+  }
+
   void _showTimeSavedDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("เวลาถูกบันทึกแล้ว"),
-          content: Text("เวลาของคุณคือ: ${_formatDuration(_lastDuration)}"),
+          title: const Text("เวลาถูกบันทึกแล้ว",
+              style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.grey[800],
+          content: Text("เวลาของคุณคือ: ${_formatDuration(_lastDuration)}",
+              style: TextStyle(color: Colors.white)),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
+                var h = _lastDuration.inHours;
+                var m = _lastDuration.inMinutes;
+                await CallAPI().saveDbTime({
+                  "type": type,
+                  "timeh": _lastDuration.inHours,
+                  "timem": _lastDuration.inMinutes,
+                });
+                Utility().logger.d('type: $type, timeh: $h, timem: $m');
               },
-              child: const Text("ตกลง"),
+              child: const Text("ตกลง",
+                  style: TextStyle(color: Colors.green, fontSize: 18)),
             ),
           ],
         );
@@ -147,6 +202,12 @@ class _Arm1State extends State<Arm1> {
                       if (isLeftSelected) {
                         isRightSelected = false;
                       }
+
+                      if (isLeftSelected) {
+                        type = '0';
+                      } else if (isRightSelected) {
+                        type = '1';
+                      }
                     });
                   },
                   style: ElevatedButton.styleFrom(
@@ -156,14 +217,13 @@ class _Arm1State extends State<Arm1> {
                         width: 2),
                     backgroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(24), // เพิ่มมุมโค้งที่มากขึ้น
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 24),
                   ),
-                  child: Row(
-                    children: const [
+                  child: const Row(
+                    children: [
                       Icon(Icons.directions_walk, color: Colors.yellow),
                       SizedBox(width: 8),
                       Text('เดินจงกรม', style: TextStyle(color: Colors.white)),
@@ -188,14 +248,13 @@ class _Arm1State extends State<Arm1> {
                         width: 2),
                     backgroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(24), // เพิ่มมุมโค้งที่มากขึ้น
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 24),
                   ),
-                  child: Row(
-                    children: const [
+                  child: const Row(
+                    children: [
                       Icon(Icons.self_improvement, color: Colors.green),
                       SizedBox(width: 8),
                       Text('นั่งสมาธิ', style: TextStyle(color: Colors.white)),
