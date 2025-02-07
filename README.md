@@ -87,6 +87,16 @@ npx prisma migrate dev --name init
 npx prisma generate
 ```
 
+8. หรือ Import จากไฟล์ appapi/app_2025-02-08_003929.sql
+ใช้คำสั่ง MySQL เพื่อทำการนำเข้าไฟล์ SQL
+```bash
+mysql -u username -p database_name < app_2025-02-08_003929.sql
+```
+ตามด้วย
+```bash
+npx prisma generate
+```
+
 # คำสั่ง build project
 
 ### ขั้นตอนที่ 1: สร้าง Keystore
