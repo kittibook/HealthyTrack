@@ -162,3 +162,53 @@ flutter build apk
    ```
 
 # การรัน emulator หรือโทรศัพท์ android
+
+
+### การรันโปรเจกต์บน **Emulator**
+
+**ติดตั้ง Android Studio**: หากยังไม่ได้ติดตั้ง Android Studio, คุณสามารถดาวน์โหลดและติดตั้งจาก [เว็บไซต์ Android Studio](https://developer.android.com/studio)
+
+
+**ตั้งค่า Android Emulator**:
+
+-   เปิด **Android Studio**.
+-   ไปที่ **AVD Manager** (Android Virtual Device Manager) ที่สามารถหาได้จาก Toolbar หรือเมนู `Tools` > `AVD Manager`.
+-   เลือก **Create Virtual Device**.
+-   เลือกอุปกรณ์ที่ต้องการ เช่น Pixel 4 หรืออุปกรณ์ที่เหมาะสมกับแอปของคุณ.
+-   เลือกเวอร์ชันของ **Android** ที่ต้องการ.
+-   ตั้งค่าคุณสมบัติของ Emulator และคลิก **Finish**.
+
+**รัน Emulator**:
+-   หลังจากสร้าง Emulator แล้ว คุณสามารถคลิก **Play** หรือ **Start** ที่ Emulator เพื่อเริ่มการทำงานของ Emulator.
+
+**รันแอปบน Emulator**: เปิด **เทอร์มินัล** หรือ **Command Prompt** ในโฟลเดอร์โปรเจกต์ของคุณและใช้คำสั่ง
+
+  ```bash
+flutter run
+   ```
+
+### การรันโปรเจกต์บน **โทรศัพท์ Android จริง**
+-   **เปิด Developer Options บนโทรศัพท์ Android**:
+    
+    -   ไปที่ **Settings** > **About phone**.
+    -   ค้นหาคำว่า **Build number** และแตะ 7 ครั้งจนได้รับข้อความว่า` "ตอนนี้คุณเป็นนักพัฒนาแล้ว"`.
+
+-  **เปิด USB Debugging**:
+
+	-   ไปที่ **Settings** > **Developer options**.
+	-   เปิด **USB debugging**.
+-   **เชื่อมต่อโทรศัพท์กับคอมพิวเตอร์**: ใช้สาย USB เชื่อมต่อโทรศัพท์กับคอมพิวเตอร์.
+    
+-   **อนุญาตการเชื่อมต่อจากคอมพิวเตอร์**: เมื่อเชื่อมต่อสำเร็จจะมีข้อความปรากฏบนโทรศัพท์เพื่อให้คุณอนุญาตให้การเชื่อมต่อนั้นๆ ผ่าน **USB debugging** ให้คลิก "Allow".
+    
+-   **รันแอปบนโทรศัพท์ Android**: เปิด **เทอร์มินัล** หรือ **Command Prompt** ในโฟลเดอร์โปรเจกต์ Flutter ของคุณแล้วใช้คำสั่ง:
+ ```bash
+flutter run
+   ```
+
+### การตรวจสอบอุปกรณ์ที่เชื่อมต่อ
+
+คุณสามารถตรวจสอบว่าโทรศัพท์หรือ Emulator พร้อมใช้งานหรือไม่โดยใช้คำสั่ง
+ ```bash
+flutter devices
+   ```
