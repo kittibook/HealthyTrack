@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id       Int     @id @default(autoincrement())
+  name     String
+  age      Int
+  birthday String
+  height   Int
+  weight   Int
+  username String
+  password String
+  Waist    String
+  img      String?
+}
+
+//ติดตามการกิน
+model eat {
+  id          Int      @id @default(autoincrement())
+  userid      Int
+  food        String? // อาหาร
+  rice1       String? // ข้าวจ้าว
+  rice2       String? //ข้าวเหนียว
+  fruit       String? // ผลไม้
+  thaidessert String? // ขนมไทย
+  drink       String?
+  Kcal        String
+  date        DateTime
+}
+
+// ติดตามการบิณฑบาต
+model walk {
+  id        Int      @id @default(autoincrement())
+  userid    Int
+  timeh     String
+  timem     String
+  walkcount Int // จำนวนก้าว
+  kcal      Int // จำนวนแคลอรี
+  date      DateTime
+}
+
+//ติดตามการทำสมาธิและจงกรม
+model meditate {
+  id     Int    @id @default(autoincrement())
+  userid Int
+  type   Int // 0 ทำสมาธิ && 1 เดินจงกรม
+  timeh  String
+  timem  String
+}
+
+//กิจกรรมทางกาย
+model activity {
+  id   Int    @id @default(autoincrement())
+  name String
+  kcal String
+  time String
+}
+
+model dataday {
+  id               Int    @id @default(autoincrement())
+  userid           Int
+  date             String
+  height           Int
+  weight           Int
+  bmi              Int
+  pressure         Int? // ค่าตวามดัน
+  sugarlevel       Int? //ค่าน้ำตาล
+  fat              Int? //ค่าไขมันในเลือด
+  totalCholesterol Int?
+  HDL              Int?
+  LDL              Int?
+  Trlglycerldes    Int?
+}
+
+model chat {
+  id     Int      @id @default(autoincrement())
+  userid Int
+  data   String
+  date   DateTime
+}
+
+model menu {
+  id       Int        @id @default(autoincrement())
+  name     String
+  menudata menudata[]
+}
+
+model menudata {
+  id     Int    @id @default(autoincrement())
+  menuid Int
+  menu   menu   @relation(fields: [menuid], references: [id])
+  name   String
+  Kcal   Int
+}
+
+model target {
+  id     Int     @id @default(autoincrement())
+  userid Int
+  bmi    String?
+  cal    String?
+}
+
+//  npx prisma migrate dev --create-only
+// npx prisma migrate dev –name init
+// npx prisma generate
