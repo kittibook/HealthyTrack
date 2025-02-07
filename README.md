@@ -57,7 +57,7 @@ git clone https://github.com/kittibook/HealthyTrack.git
 ```
 3. เมื่อทำการ `clone` เสร็จแล้ว ให้เข้าไปที่โฟลเดอร์โปรเจกต์
 ```bash
-cd api
+cd appapi
 npm install
 ```
 4. ติดตั้ง Prisma ในโปรเจกต์ของคุณ: 
