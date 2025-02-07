@@ -78,7 +78,7 @@ datasource db {
 6. กำหนดค่า **DATABASE_URL** ในไฟล์ `.env`
 
 ```bash
-DATABASE_URL="postgresql://username:password@localhost:5432/your_database_name"
+DATABASE_URL="mysql://username:password@localhost:5432/your_database_name"
 ```
 7. คำสั่งสร้างฐานข้อมูล
 ```bash
@@ -87,5 +87,78 @@ npx prisma migrate dev --name init
 npx prisma generate
 ```
 
+# คำสั่ง build project
+
+### ขั้นตอนที่ 1: สร้าง Keystore
+
+ใช้คำสั่งใน Command Prompt เพื่อสร้าง Keystore ไฟล์
+```bash
+keytool -genkey -v -keystore %userprofile%\upload-keystore.jks ^ -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 ^ -alias upload
+```
+
+ คำอธิบาย:
+-  `%userprofile%\upload-keystore.jks`: กำหนดตำแหน่งที่ไฟล์ Keystore จะถูกสร้าง
+-   `-keyalg RSA`: กำหนดอัลกอริธึมที่ใช้ในการเข้ารหัส
+-   `-keysize 2048`: กำหนดขนาดคีย์ (2048 บิต)
+-   `-validity 10000`: กำหนดอายุของคีย์ (10000 วัน)
+-   `-alias upload`: กำหนดชื่อของ alias สำหรับคีย์ (ในที่นี้ชื่อว่า `upload`)
+
+### ขั้นตอนที่ 2: สร้างไฟล์ `key.properties`
+หลังจากที่สร้าง Keystore แล้ว, สร้างไฟล์ `key.properties` ในโฟลเดอร์ `[project]/android/key.properties` และใส่ข้อมูลดังนี้
+```bash
+storePassword=<password-from-previous-step>
+keyPassword=<password-from-previous-step>
+keyAlias=upload
+storeFile=<keystore-file-location>
+```
+
+ตัวอย่าง
+```bash
+storePassword=123456
+keyPassword=123456
+keyAlias=upload
+storeFile=C:/Users/YourUserName/upload-keystore.jks
+```
+
+### ขั้นตอนที่ 3: แก้ไขไฟล์ `build.gradle` ในโปรเจกต์ Android
+ในไฟล์ `android/app/build.gradle`, เพิ่มโค้ดนี้
+
+ 1. โหลดข้อมูลจาก `key.properties`
+ ```bash
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+```
+ 2. ตั้งค่า signing configuration
+ ```bash
+signingConfigs {
+    release {
+        keyAlias keystoreProperties['keyAlias']
+        keyPassword keystoreProperties['keyPassword']
+        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+        storePassword keystoreProperties['storePassword']
+    }
+}
+buildTypes {
+    release {
+        signingConfig signingConfigs.release
+    }
+}
+```
+
+### ขั้นตอนที่ 4: การสร้างไฟล์สำหรับการอัปโหลด
 
 
+ - สร้าง App Bundle (แนะนำ)
+  ```bash
+flutter build appbundle
+   ```
+   
+ - สร้าง APK
+  ```bash
+flutter build apk
+   ```
+
+# การรัน emulator หรือโทรศัพท์ android
