@@ -4,7 +4,7 @@
             "outputFile": "com.example.app-mergeDebugResources-39:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
-                    "source": "/Users/bxok/Documents/app/app/android/app/src/main/res/values-night/styles.xml",
+                    "source": "/Users/bxok/Desktop/HealthyTrack/app/android/app/src/main/res/values-night/styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",
